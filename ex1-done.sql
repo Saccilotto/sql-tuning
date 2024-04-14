@@ -17,7 +17,7 @@ COMMIT;
 --3- Coletar estatisticas sobre a estrutura e dados armazenados na tabela:
 ANALYZE TABLE pessoas compute STATISTICS;
 
---4- Listar as informaçoes sobre a estrutura e dados armazenados na tabela:
+--4- Listar as informaï¿½oes sobre a estrutura e dados armazenados na tabela:
 SELECT *
 FROM ALL_TABLES
 WHERE TABLE_NAME = 'PESSOAS';
@@ -84,8 +84,8 @@ FROM pessoas;
 /*
 LTER TABLE pessoas
 ADD CONSTRAINT pk_pessoas PRIMARY KEY(id_pessoa)
-Relatório de erros -
-ORA-02437: não é possível validar (BI106097.PK_PESSOAS) - chave primária violada
+Relatï¿½rio de erros -
+ORA-02437: nï¿½o ï¿½ possï¿½vel validar (BI106097.PK_PESSOAS) - chave primï¿½ria violada
 02437. 00000 -  "cannot validate (%s.%s) - primary key violated"
 *Cause:    attempted to validate a primary key with duplicate values or null
            values.
@@ -122,7 +122,7 @@ FROM ALL_CONSTRAINTS
 WHERE TABLE_NAME = 'PESSOAS';
  
 -- O que mudou?
- -- Há uma nova constranint do tipo P (private key) relacionado espeficamente ao meu schema,
+ -- Hï¿½ uma nova constranint do tipo P (private key) relacionado espeficamente ao meu schema,
  -- gerando um total de 5 constrainst:
 /*
 BI106097	PK_PESSOAS	P	PESSOAS						ENABLED	NOT DEFERRABLE	IMMEDIATE	VALIDATED	USER NAME			18/03/24	BI106097	PK_PESSOAS			0
@@ -145,7 +145,7 @@ WHERE TABLE_NAME = 'PESSOAS';
 -- INDEX_TYPE = NORMAL
 -- UNIQUENESS = UNIQUE
 -- DISTINCT_KEYS = 248
--- BLEVEL = 0 - possui apenas o n— folha que tambem eh a raiz da B-Tree+ ? Sim
+-- BLEVEL = 0 - possui apenas o nï¿½ folha que tambem eh a raiz da B-Tree+ ? Sim
 -- LEAK_BLOCKS = 1
  
 -- Executar a seguinte consulta, verificando o plano de execucao:

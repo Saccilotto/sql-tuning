@@ -57,10 +57,26 @@ WHERE
     AND DET.COUNTRY = 'BRAZIL'
     AND DET.BIRTHDATE <= ADD_MONTHS(SYSDATE, -40*12)
 ;
---);
 
+EXPLAIN PLAN FOR
+SELECT 
+    PSG.FIRSTNAME || ' ' || PSG.LASTNAME AS FULL_NAME
+FROM 
+    AIR_PASSENGERS PSG
+JOIN 
+    AIR_PASSENGERS_DETAILS DET 
+    ON 
+    PSG.PASSENGER_ID = DET.PASSENGER_ID
+WHERE
+    DET.SEX = 'w'
+    AND DET.COUNTRY = 'BRAZIL'
+    AND DET.BIRTHDATE <= ADD_MONTHS(SYSDATE, -40*12)
+;
+
+SELECT PLAN_TABLE_OUTPUT 
+FROM TABLE(DBMS_XPLAN.DISPLAY());
 -- 2 QUERY
-
+EXPLAIN PLAN FOR
 SELECT 
     AIR_AIRLINES.AIRLINE_NAME AS AIRLINE_NAME,
     AIR_FLIGHTS.AIRPLANE_ID AS AIRPLANE_ID,
@@ -90,7 +106,10 @@ GROUP BY
     AIR_AIRPLANE_TYPES.NAME
 ;
 
+SELECT PLAN_TABLE_OUTPUT 
+FROM TABLE(DBMS_XPLAN.DISPLAY());
 -- 3 QUERY
+EXPLAI PLAN FOR
 SELECT 
     FLI.FLIGHTNO AS FLIGHT_NUMBER,
     DE.NAME AS DEPARTURE_AIRPORT,
@@ -105,7 +124,7 @@ INNER JOIN
     AIR_PASSENGERS PASSEN ON BOOK.PASSENGER_ID = PASSEN.PASSENGER_ID
 INNER JOIN 
     AIR_PASSENGERS_DETAILS DETAIL ON PASSEN.PASSENGER_ID = DETAIL.PASSENGER_ID
-INNER JOIN 
+INNER JOIN
     AIR_AIRPORTS DE ON FLI.FROM_AIRPORT_ID = DE.AIRPORT_ID
 INNER JOIN 
     AIR_AIRPORTS DEST ON FLI.TO_AIRPORT_ID = DEST.AIRPORT_ID
@@ -115,6 +134,10 @@ WHERE
     FLI.DEPARTURE BETWEEN TRUNC(TO_DATE('2023-03-25 00:00:00', 'YYYY-MM-DD HH24:MI:SS')) 
     AND TRUNC(TO_DATE('2023-03-25 00:00:00', 'YYYY-MM-DD HH24:MI:SS')+1) - (1/(24*60*60))
 ;
+
+
+SELECT PLAN_TABLE_OUTPUT 
+FROM TABLE(DBMS_XPLAN.DISPLAY());
 
 -- 4 QUERY
  
@@ -169,12 +192,33 @@ GROUP BY
 
 
 
-/*Etapa 3 - Sintonia de desempenho (SQL tunning)
-Execute, cada uma das consultas, sem criar nenhuma constraint ou estrutura de acesso otimizado, os seguintes passos:
+-- Etapa 3 - Sintonia de desempenho (SQL tunning)
+-- Execute, cada uma das consultas, sem criar nenhuma constraint ou estrutura de acesso otimizado, os seguintes passos:
 
-Execute a consulta e confira a resposta.
-Capture o plano de execução.
-*/
+-- Execute a consulta e confira a resposta.
+-- Capture o plano de execução.
+
+-- Etapa 4 - Sintonia de desempenho (SQL tunning)
+-- Para cada uma das consultas, faça os testes necessários buscando a geração do melhor plano de execução possível. Lembre-se, entretanto, que o espaço de armazenamento de vocês é limitado e duplicar tabelas grandes pode extrapolá-lo, gerando um erro ao criar tabelas, clusters, índices ou outras estruturas. A seguir:
+
+-- Crie todas as estruturas de acesso otimizado necessárias para que a consulta seja executada da forma mais otimizada possível:
+-- Constraints de chave primária (primary key) → geram índices únicos implementados como B-Tree+
+-- Constraints de chave alternativa (unique)  → geram índices únicos implementados como B-Tree+
+-- �?ndices não únicos implementados como B-Tree+
+-- Podem/devem ser implementados em colunas que frequentemente aparecem em condições da cláusula where
+-- Podem e normalmente devem ser criados nas constraints de chave estrangeira (foreign key)
+-- Clusters de tabelas com acesso via índice B-Tree+
+-- Clusters de tabelas com acesso via hash
+-- Liste e capture a imagem do plano de execução sugerido pelo Oracle
+-- Material a ser entregue
+-- Entregar relatório em PDF contendo, para cada consulta:
+
+-- Dados de identificação do aluno;
+-- Comando SQL DQL (SELECT) que implementa a consulta;
+-- Captura de tela do Plano de Execução do SQL Developer anterior à sintonia de desempenho;
+-- Comandos SQL DDL (Data Definition Language) para criação das estruturas de acesso sugeridas; e
+-- Captura de tela do Plano de Execução do SQL Developer anterior à sintonia de desempenho.
+-- IMPORTANTE: Enriqueça o trabalho com comentários a respeito do seu desenvolvimento e sobre o desempenho das consultas, tanto antes da sintonia de desempenho quanto depois, quais aspectos foram melhorados. Comente também sobre dificuldades encontradas para o desenvolvimento das diversas etapas do trabalho.
 SELECT 
     PSG.FIRSTNAME || ' ' || PSG.LASTNAME AS FULL_NAME
 FROM 
@@ -197,7 +241,7 @@ Para cada uma das consultas, faça os testes necessários buscando a geração d
 Crie todas as estruturas de acesso otimizado necessárias para que a consulta seja executada da forma mais otimizada possível:
 Constraints de chave primária (primary key) → geram índices únicos implementados como B-Tree+
 Constraints de chave alternativa (unique)  → geram índices únicos implementados como B-Tree+
-Índices não únicos implementados como B-Tree+
+�?ndices não únicos implementados como B-Tree+
 Podem/devem ser implementados em colunas que frequentemente aparecem em condições da cláusula where
 Podem e normalmente devem ser criados nas constraints de chave estrangeira (foreign key)
 Clusters de tabelas com acesso via índice B-Tree+
