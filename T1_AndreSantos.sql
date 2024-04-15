@@ -78,6 +78,36 @@ FROM TABLE(DBMS_XPLAN.DISPLAY());
 
 -- 2 QUERY
 
+SELECT 
+    AIR_AIRLINES.AIRLINE_NAME AS AIRLINE_NAME,
+    AIR_FLIGHTS.AIRPLANE_ID AS AIRPLANE_ID,
+    AIR_AIRPLANE_TYPES.NAME AS AIRPLANE_TYPE,
+    COUNT(AIR_FLIGHTS.FLIGHT_ID) AS NUM_FLIGHTS
+FROM 
+    AIR_AIRLINES
+INNER JOIN 
+    AIR_FLIGHTS ON AIR_AIRLINES.AIRLINE_ID = AIR_FLIGHTS.AIRLINE_ID
+INNER JOIN 
+    AIR_AIRPLANES ON AIR_FLIGHTS.AIRPLANE_ID = AIR_AIRPLANES.AIRPLANE_ID
+INNER JOIN 
+    AIR_AIRPLANE_TYPES ON AIR_AIRPLANES.AIRPLANE_TYPE_ID = AIR_AIRPLANE_TYPES.AIRPLANE_TYPE_ID
+INNER JOIN 
+    AIR_AIRPORTS FROM_AIRPORT ON AIR_FLIGHTS.FROM_AIRPORT_ID = FROM_AIRPORT.AIRPORT_ID
+INNER JOIN 
+    AIR_AIRPORTS TO_AIRPORT ON AIR_FLIGHTS.TO_AIRPORT_ID = TO_AIRPORT.AIRPORT_ID
+INNER JOIN 
+    AIR_AIRPORTS_GEO FROM_AIRPORT_GEO ON FROM_AIRPORT.AIRPORT_ID = FROM_AIRPORT_GEO.AIRPORT_ID
+INNER JOIN 
+    AIR_AIRPORTS_GEO TO_AIRPORT_GEO ON TO_AIRPORT.AIRPORT_ID = TO_AIRPORT_GEO.AIRPORT_ID
+WHERE 
+    FROM_AIRPORT_GEO.COUNTRY = 'BRAZIL' AND TO_AIRPORT_GEO.COUNTRY = 'BRAZIL'
+GROUP BY 
+    AIR_AIRLINES.AIRLINE_NAME,
+    AIR_FLIGHTS.AIRPLANE_ID,
+    AIR_AIRPLANE_TYPES.NAME
+;
+
+
 EXPLAIN PLAN FOR
 SELECT 
     AIR_AIRLINES.AIRLINE_NAME AS AIRLINE_NAME,
@@ -110,7 +140,35 @@ GROUP BY
 
 SELECT PLAN_TABLE_OUTPUT 
 FROM TABLE(DBMS_XPLAN.DISPLAY());
+
+
 -- 3 QUERY
+SELECT 
+    FLI.FLIGHTNO AS FLIGHT_NUMBER,
+    DE.NAME AS DEPARTURE_AIRPORT,
+    DEST.NAME AS DESTINATION_AIRPORT,
+    PASSEN.FIRSTNAME || ' ' || PASSEN.LASTNAME AS PASSENGER_NAME,
+    BOOK.SEAT AS PASSENGER_SEAT
+FROM 
+    AIR_FLIGHTS FLI
+INNER JOIN 
+    AIR_BOOKINGS BOOK ON FLI.FLIGHT_ID = BOOK.FLIGHT_ID
+INNER JOIN 
+    AIR_PASSENGERS PASSEN ON BOOK.PASSENGER_ID = PASSEN.PASSENGER_ID
+INNER JOIN 
+    AIR_PASSENGERS_DETAILS DETAIL ON PASSEN.PASSENGER_ID = DETAIL.PASSENGER_ID
+INNER JOIN
+    AIR_AIRPORTS DE ON FLI.FROM_AIRPORT_ID = DE.AIRPORT_ID
+INNER JOIN 
+    AIR_AIRPORTS DEST ON FLI.TO_AIRPORT_ID = DEST.AIRPORT_ID
+INNER JOIN 
+    AIR_FLIGHTS_SCHEDULES FS ON FLI.FLIGHTNO = FS.FLIGHTNO
+WHERE 
+    FLI.DEPARTURE BETWEEN TRUNC(TO_DATE('2023-03-25 00:00:00', 'YYYY-MM-DD HH24:MI:SS')) 
+    AND TRUNC(TO_DATE('2023-03-25 00:00:00', 'YYYY-MM-DD HH24:MI:SS')+1) - (1/(24*60*60))
+;
+
+
 EXPLAIN PLAN FOR
 SELECT 
     FLI.FLIGHTNO AS FLIGHT_NUMBER,
@@ -141,6 +199,30 @@ SELECT PLAN_TABLE_OUTPUT
 FROM TABLE(DBMS_XPLAN.DISPLAY());
 
 -- 4 QUERY
+
+SELECT AIR_AIRLINES.AIRLINE_NAME AS AIRLINENAME_NAME, AIR_FLIGHTS_SCHEDULES.DEPARTURE AS DEPARTURE
+FROM AIR_AIRLINES
+INNER JOIN 
+    AIR_FLIGHTS ON AIR_AIRLINES.AIRLINE_ID = AIR_FLIGHTS.AIRLINE_ID
+INNER JOIN 
+    AIR_FLIGHTS_SCHEDULES ON AIR_FLIGHTS.FLIGHTNO = AIR_FLIGHTS_SCHEDULES.FLIGHTNO
+INNER JOIN 
+    AIR_AIRPORTS ON AIR_FLIGHTS.TO_AIRPORT_ID = AIR_AIRPORTS.AIRPORT_ID
+INNER JOIN
+    AIR_AIRPORTS_GEO ON AIR_AIRPORTS.AIRPORT_ID = AIR_AIRPORTS_GEO.AIRPORT_ID
+WHERE
+    AIR_AIRPORTS_GEO.CITY = 'NEW YORK'
+    AND AIR_FLIGHTS_SCHEDULES.DEPARTURE 
+    BETWEEN TRUNC(TO_DATE('2022-05-01 00:00:00', 'YYYY-MM-DD HH24:MI:SS')) AND 
+    TRUNC(TO_DATE('2022-05-31 23:59:59', 'YYYY-MM-DD HH24:MI:SS'))-(1/(24*60*60))
+    AND 
+    (
+    AIR_FLIGHTS_SCHEDULES.TUESDAY  = 1
+    OR AIR_FLIGHTS_SCHEDULES.WEDNESDAY = 1
+    OR AIR_FLIGHTS_SCHEDULES.THURSDAY = 1
+    )
+;
+
 
 EXPLAIN PLAN FOR
 SELECT AIR_AIRLINES.AIRLINE_NAME AS AIRLINENAME_NAME, AIR_FLIGHTS_SCHEDULES.DEPARTURE AS DEPARTURE
@@ -178,6 +260,23 @@ A consulta deve utilizar todas as tabelas do cluster e pelo
 menos outra tabela fora dele.
 */
 
+SELECT AIR_PASSENGERS.PASSENGER_ID AS CLIENT, AIR_FLIGHTS.DEPARTURE AS DEPARTURE_DATE, COUNT(AIR_BOOKINGS.BOOKING_ID) AS NUM_BOOKINGS, AIR_BOOKINGS.PRICE AS BOOKING_PRICE_UNIT, AIR_BOOKINGS.PRICE * COUNT(AIR_BOOKINGS.BOOKING_ID) AS TOTAL_PRICE    
+FROM 
+    AIR_AIRPORTS_GEO
+INNER JOIN  
+    AIR_AIRPORTS ON AIR_AIRPORTS_GEO.AIRPORT_ID = AIR_AIRPORTS.AIRPORT_ID
+INNER JOIN 
+    AIR_FLIGHTS ON AIR_AIRPORTS.AIRPORT_ID = AIR_FLIGHTS.FROM_AIRPORT_ID
+INNER JOIN
+    AIR_BOOKINGS ON AIR_FLIGHTS.FLIGHT_ID = AIR_BOOKINGS.FLIGHT_ID
+INNER JOIN
+    AIR_PASSENGERS ON AIR_BOOKINGS.PASSENGER_ID = AIR_PASSENGERS.PASSENGER_ID
+WHERE
+    AIR_PASSENGERS.PASSENGER_ID = 313
+GROUP BY
+    AIR_PASSENGERS.PASSENGER_ID, AIR_BOOKINGS.PRICE, AIR_FLIGHTS.DEPARTURE
+    ;
+
 EXPLAIN PLAN FOR
 SELECT AIR_PASSENGERS.PASSENGER_ID AS CLIENT, AIR_FLIGHTS.DEPARTURE AS DEPARTURE_DATE, COUNT(AIR_BOOKINGS.BOOKING_ID) AS NUM_BOOKINGS, AIR_BOOKINGS.PRICE AS BOOKING_PRICE_UNIT, AIR_BOOKINGS.PRICE * COUNT(AIR_BOOKINGS.BOOKING_ID) AS TOTAL_PRICE    
 FROM 
@@ -211,7 +310,7 @@ FROM TABLE(DBMS_XPLAN.DISPLAY());
 -- Crie todas as estruturas de acesso otimizado necessárias para que a consulta seja executada da forma mais otimizada possível:
 -- Constraints de chave primária (primary key) → geram índices únicos implementados como B-Tree+
 -- Constraints de chave alternativa (unique)  → geram índices únicos implementados como B-Tree+
--- �?ndices não únicos implementados como B-Tree+
+-- �?ndices não únicos implementados como B-Tree+
 -- Podem/devem ser implementados em colunas que frequentemente aparecem em condições da cláusula where
 -- Podem e normalmente devem ser criados nas constraints de chave estrangeira (foreign key)
 -- Clusters de tabelas com acesso via índice B-Tree+
@@ -226,6 +325,29 @@ FROM TABLE(DBMS_XPLAN.DISPLAY());
 -- Comandos SQL DDL (Data Definition Language) para criação das estruturas de acesso sugeridas; e
 -- Captura de tela do Plano de Execução do SQL Developer anterior à sintonia de desempenho.
 -- IMPORTANTE: Enriqueça o trabalho com comentários a respeito do seu desenvolvimento e sobre o desempenho das consultas, tanto antes da sintonia de desempenho quanto depois, quais aspectos foram melhorados. Comente também sobre dificuldades encontradas para o desenvolvimento das diversas etapas do trabalho.
+
+
+drop table AIR_PASSENGERS cascade constraints;
+drop table AIR_PASSENGERS_DETAILS cascade constraints;
+
+
+create table AIR_PASSENGERS as select * from DSILVA.AIR_PASSENGERS;
+create table AIR_PASSENGERS_DETAILS as select * from DSILVA.AIR_PASSENGERS_DETAILS;
+
+
+CREATE INDEX idx_birthdate ON AIR_PASSENGERS_DETAILS(BIRTHDATE);
+
+CREATE INDEX idx_passenger_id_psg ON AIR_PASSENGERS(PASSENGER_ID) INDEXTYPE IS HASH;
+CREATE INDEX idx_passenger_id_det ON AIR_PASSENGERS_DETAILS(PASSENGER_ID) INDEXTYPE IS HASH;
+
+CREATE BITMAP INDEX idx_sex ON AIR_PASSENGERS_DETAILS(SEX);
+CREATE BITMAP INDEX idx_country ON AIR_PASSENGERS_DETAILS(COUNTRY);
+
+
+ANALYZE TABLE AIR_PASSENGERS COMPUTE STATISTICS;
+ANALYZE TABLE AIR_PASSENGERS_DETAILS COMPUTE STATISTICS;
+
+
 SELECT 
     PSG.FIRSTNAME || ' ' || PSG.LASTNAME AS FULL_NAME
 FROM 
@@ -241,6 +363,7 @@ WHERE
 ;
 
 
+
 /*
 Etapa 4 - Sintonia de desempenho (SQL tunning)
 Para cada uma das consultas, faça os testes necessários buscando a geração do melhor plano de execução possível. Lembre-se, entretanto, que o espaço de armazenamento de vocês é limitado e duplicar tabelas grandes pode extrapolá-lo, gerando um erro ao criar tabelas, clusters, índices ou outras estruturas. A seguir:
@@ -248,19 +371,13 @@ Para cada uma das consultas, faça os testes necessários buscando a geração d
 Crie todas as estruturas de acesso otimizado necessárias para que a consulta seja executada da forma mais otimizada possível:
 Constraints de chave primária (primary key) → geram índices únicos implementados como B-Tree+
 Constraints de chave alternativa (unique)  → geram índices únicos implementados como B-Tree+
-�?ndices não únicos implementados como B-Tree+
+�?ndices não únicos implementados como B-Tree+
 Podem/devem ser implementados em colunas que frequentemente aparecem em condições da cláusula where
 Podem e normalmente devem ser criados nas constraints de chave estrangeira (foreign key)
 Clusters de tabelas com acesso via índice B-Tree+
 Clusters de tabelas com acesso via hash
 Liste e capture a imagem do plano de execução sugerido pelo Oracle*/
 
-SELECT * FROM AIR_PASSENGERS_DETAILS
-WHERE AIR_PASSENGERS_DETAILS.BIRTHDATE <= ADD_MONTHS(SYSDATE, -40*12);
--- END: ed8c6549bwf9
-    
-    
-    
     
 select 'drop table '||table_name||' cascade constraints;' from user_tables;
 drop table AIR_AIRPORTS cascade constraints;
